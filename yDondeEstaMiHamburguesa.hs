@@ -100,6 +100,13 @@ tieneMasDe1000Calorias unaHamburguesa = (sum.map cuantasCaloriasTiene) unaHambur
 cambiarAcompaniamientoPor :: String -> Combo -> Combo
 cambiarAcompaniamientoPor unAcompaniamiento unCombo = unCombo {acompaniamiento = unAcompaniamiento}
 
+-- EJEMPLO DE CONSULTA:
+-- cambiarAcompaniamientoPor "Nugets" cajitaFeliz.
+--  Combo {
+    --      hamburguesa = ["Carne","Queso","Pan"], 
+    --      bebida = Bebida {tipoBebida = "Agua Mineral", tamanioBebida = 1, light = False}, 
+    --      acompaniamiento = "Nugets"}
+
 -- b. agrandarBebida: retorna el combo agrandando la bebida al tamanio siguiente 
 -- (teniedo en cuenta que el máximo es el tamanio grande, 
 -- no importa cuánto se lo trate de seguir agrandando).
@@ -113,33 +120,82 @@ agrandarBebida unCombo
 cambiarA :: Tamanio -> Bebida -> Bebida
 cambiarA tamanio unaBebida = unaBebida{tamanioBebida = tamanio}
 
+-- EJEMPLOS DE CONSULTAS:
+-- agrandarBebida cajitaFeliz --> 
+    -- Combo {
+        --hamburguesa = ["Carne","Queso","Pan"], 
+        -- bebida = Bebida {tipoBebida = "Agua Mineral", tamanioBebida = 2, light = False}, 
+        -- acompaniamiento = "Papas"}
+
+-- agrandarBebida dobleMcBacon -->
+    -- Combo {
+        -- hamburguesa = ["Carne","Queso","Pan","Cheddar","Panceta","Cebolla","Mostaza","Ketchup"], 
+        -- bebida = Bebida {tipoBebida = "Gaseosa", tamanioBebida = 3, light = True}, 
+        -- acompaniamiento = "Papas"}
+
 -- c. peroSin: 
 -- retorna el combo de modo que su hamburguesa no incluya ingredientes que cumplan con
--- una determinada restricción. En principio nos interesan las siguientes restricciones, 
--- pero podría haber otras:
+-- una determinada restricción.
 
 peroSin :: ([Ingrediente] -> [Ingrediente]) -> Combo -> Combo
-peroSin unaRestriccion unCombo = unCombo{hamburguesa = unaRestriccion (hamburguesa unCombo)}
+peroSin unaRestriccion unCombo = unCombo {hamburguesa = unaRestriccion (hamburguesa unCombo)}
 
---condimento unaHamburguesa = 
+-- condimento: Le quita los que son condimentos de una hamburguesa.
+condimento :: [Ingrediente] -> [Ingrediente]
+condimento unaHamburguesa = filter(\x-> (not.elem x) condimentos) unaHamburguesa
 
-queCondimentoTiene :: [Ingrediente] -> [Ingrediente]
-queCondimentoTiene unaHamburguesa = filter(\x-> x `elem` condimentos) unaHamburguesa
+-- masCaloricoQue: Dado una cantidad de calorias y una hamburguesa, le quita los ingredientes que
+-- superan esa cantidad.
+masCaloricoQue :: Integer -> [Ingrediente] -> [Ingrediente]
+masCaloricoQue cal unaHamburguesa = filter(\x-> not(cuantasCaloriasTiene x > cal)) unaHamburguesa
 
-quitarElemento :: Eq a => [a] -> a -> [a]
-quitarElemento [] _ = []
-quitarElemento (x:xs) e 
-    | x == e = quitarElemento xs e
-    | otherwise = x:( quitarElemento xs e )
+-- EJEMPLO DE CONSULTA:
+-- peroSin (masCaloricoQue 100) dobleMcBacon -->
+    -- Combo {
+        -- hamburguesa = ["Queso","Pan","Cheddar","Cebolla","Mostaza","Ketchup"], 
+        -- bebida = Bebida {tipoBebida = "Gaseosa", tamanioBebida = 2, light = True}, 
+        -- acompaniamiento = "Papas"}
 
--- i. esCondimento: 
--- un ingrediente cumple esta restricción si es igual a alguno de los condimentos conocidos.
+----------------------------------------------------------------------
 
-esCondimento :: Ingrediente -> Bool
-esCondimento unIngrediente = unIngrediente `elem` condimentos
+-- 4. Asumiendo que se tiene una constante comboDePrueba :: Combo , realizar una consulta con la función
+-- definida anteriormente para alterar ese combo considerando que se quieren hacer las siguientes
+-- alteraciones: agrandar la bebida, cambiar el acompañamiento por “Ensalada César”, que venga sin
+-- condimento, que venga sin ingredientes con más de 400 calorías y que venga sin queso.
 
---ii. masCaloricoQue: 
--- se cumple esta restricción si las calorías del ingrediente superan un valor dado.
+comboDePrueba :: Combo
+comboDePrueba = Combo ["Carne", "Queso", "Pan", "Cheddar", "Panceta", "Cebolla", "Mostaza", "Ketchup"] cocaColaLight "Papas"
+ 
+alteracionesDePrueba:: [Combo -> Combo]
+alteracionesDePrueba = [agrandarBebida,(cambiarAcompaniamientoPor "Ensalada Cesar"), (peroSin condimento), (peroSin (masCaloricoQue 400)),(quitar "Queso")]
 
-masCaloricoQue :: Ingrediente -> Integer -> Bool
-masCaloricoQue unIngrediente cal = (cuantasCaloriasTiene unIngrediente) > cal
+aplicar :: Combo -> (Combo -> Combo) -> Combo
+aplicar combo alteracion = alteracion combo
+
+quitar :: Ingrediente -> Combo -> Combo
+quitar elemento combo = combo {hamburguesa = quitarElemento elemento (hamburguesa combo)}
+
+quitarElemento :: Eq a => a -> [a] -> [a]
+quitarElemento _ [] = []
+quitarElemento e (x:xs) 
+    | e == x = quitarElemento e xs
+    | otherwise = x:(quitarElemento e xs)
+
+realizar :: [(Combo -> Combo)] -> Combo -> Combo
+realizar alteraciones combo = foldl aplicar combo alteraciones
+
+-- EJEMPLO DE CONSULTA:
+-- realizar alteracionesDePrueba comboDePrueba -->
+    -- Combo {hamburguesa = ["Carne","Pan","Cheddar","Cebolla"], 
+    -- bebida = Bebida {tipoBebida = "Gaseosa", tamanioBebida = 3, light = True}, 
+    -- acompaniamiento = "Ensalada Cesar"}
+
+----------------------------------------------------------------------
+
+--5. Saber si un conjunto de alteraciones alivianan un combo, 
+-- que será cierto si el combo recibido es mortal,
+-- pero luego de aplicar las alteraciones indicadas no lo es.
+
+-- EJEMPLO DE CONSULTA:
+-- esMortal comboDePrueba --> True
+-- esMortal (realizar alteracionesDePrueba comboDePrueba) --> False
