@@ -6,7 +6,7 @@ data Combo = Combo {
     hamburguesa :: [Ingrediente],
     bebida :: Bebida,
     acompaniamiento :: String 
-    }
+    } deriving Show
 
 data Bebida = Bebida {
     tipoBebida :: String,
@@ -91,3 +91,55 @@ tieneMasDe1000Calorias unaHamburguesa = (sum.map cuantasCaloriasTiene) unaHambur
 
 ----------------------------------------------------------------------
 
+-- 3. Definir una función que permita obtener a partir de un combo y una lista de alteraciones, 
+-- el combo resultante de alterar el combo con todas las alteraciones indicadas. 
+-- Las alteraciones puedan ser las siguientes:
+
+-- a. cambiarAcompaniamientoPor: retorna el combo con otro acompaniamiento elegido por el cliente.
+
+cambiarAcompaniamientoPor :: String -> Combo -> Combo
+cambiarAcompaniamientoPor unAcompaniamiento unCombo = unCombo {acompaniamiento = unAcompaniamiento}
+
+-- b. agrandarBebida: retorna el combo agrandando la bebida al tamanio siguiente 
+-- (teniedo en cuenta que el máximo es el tamanio grande, 
+-- no importa cuánto se lo trate de seguir agrandando).
+
+agrandarBebida :: Combo -> Combo
+agrandarBebida unCombo
+    | (tamanioBebida.bebida) unCombo == regular = unCombo{bebida = cambiarA mediano (bebida unCombo)} 
+    | (tamanioBebida.bebida) unCombo == mediano = unCombo{bebida = cambiarA grande (bebida unCombo)} 
+    | otherwise = unCombo
+
+cambiarA :: Tamanio -> Bebida -> Bebida
+cambiarA tamanio unaBebida = unaBebida{tamanioBebida = tamanio}
+
+-- c. peroSin: 
+-- retorna el combo de modo que su hamburguesa no incluya ingredientes que cumplan con
+-- una determinada restricción. En principio nos interesan las siguientes restricciones, 
+-- pero podría haber otras:
+
+peroSin :: ([Ingrediente] -> [Ingrediente]) -> Combo -> Combo
+peroSin unaRestriccion unCombo = unCombo{hamburguesa = unaRestriccion (hamburguesa unCombo)}
+
+--condimento unaHamburguesa = 
+
+queCondimentoTiene :: [Ingrediente] -> [Ingrediente]
+queCondimentoTiene unaHamburguesa = filter(\x-> x `elem` condimentos) unaHamburguesa
+
+quitarElemento :: Eq a => [a] -> a -> [a]
+quitarElemento [] _ = []
+quitarElemento (x:xs) e 
+    | x == e = quitarElemento xs e
+    | otherwise = x:( quitarElemento xs e )
+
+-- i. esCondimento: 
+-- un ingrediente cumple esta restricción si es igual a alguno de los condimentos conocidos.
+
+esCondimento :: Ingrediente -> Bool
+esCondimento unIngrediente = unIngrediente `elem` condimentos
+
+--ii. masCaloricoQue: 
+-- se cumple esta restricción si las calorías del ingrediente superan un valor dado.
+
+masCaloricoQue :: Ingrediente -> Integer -> Bool
+masCaloricoQue unIngrediente cal = (cuantasCaloriasTiene unIngrediente) > cal
