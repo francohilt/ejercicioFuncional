@@ -79,7 +79,7 @@ esMortal :: Combo -> Bool
 esMortal unCombo = (tipo.bebida) unCombo /= "Dietetica" && esUnaBomba (hamburguesa unCombo)
 
 esUnaBomba :: [Ingrediente] -> Bool
-esUnaBomba unaHamburguesa = any(>300) (map cuantasCaloriasTiene unaHamburguesa) || tieneMasDe1000Calorias unaHamburguesa
+esUnaBomba unaHamburguesa = any ((>300).cuantasCaloriasTiene) unaHamburguesa || tieneMasDe1000Calorias unaHamburguesa
 
 tieneMasDe1000Calorias :: [Ingrediente] -> Bool
 tieneMasDe1000Calorias unaHamburguesa = (sum.map cuantasCaloriasTiene) unaHamburguesa > 1000
