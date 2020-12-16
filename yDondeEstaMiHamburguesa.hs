@@ -9,8 +9,8 @@ data Combo = Combo {
     } deriving Show
 
 data Bebida = Bebida {
-    tipoBebida :: String,
-    tamanioBebida :: Tamanio,
+    tipo :: String,
+    tamanio :: Tamanio,
     light :: Bool
     } deriving (Show, Eq)
 
@@ -75,12 +75,10 @@ calorias unIngrediente = (head.map snd) (filter(\x-> (fst x) == unIngrediente) i
 -- o si en total la hamburguesa supera las 1000 calorías).
 
 esMortal :: Combo -> Bool
-esMortal unCombo = (tipoBebida.bebida) unCombo /= "Dietetica" && esUnaBomba (hamburguesa unCombo)
+esMortal unCombo = (tipo.bebida) unCombo /= "Dietetica" && esUnaBomba (hamburguesa unCombo)
 
 esUnaBomba :: [Ingrediente] -> Bool
-esUnaBomba unaHamburguesa
-    | any(\x-> calorias x > 300) unaHamburguesa || tieneMasDe1000Calorias unaHamburguesa = True
-    | otherwise = False
+esUnaBomba unaHamburguesa = any(>300) (map cuantasCaloriasTiene unaHamburguesa) || tieneMasDe1000Calorias unaHamburguesa
 
 tieneMasDe1000Calorias :: [Ingrediente] -> Bool
 tieneMasDe1000Calorias unaHamburguesa = (sum.map cuantasCaloriasTiene) unaHamburguesa > 1000
@@ -112,13 +110,21 @@ cambiarAcompaniamientoPor unAcompaniamiento unCombo = unCombo {acompaniamiento =
 -- no importa cuánto se lo trate de seguir agrandando).
 
 agrandarBebida :: Combo -> Combo
-agrandarBebida unCombo
-    | (tamanioBebida.bebida) unCombo == regular = unCombo{bebida = cambiarA mediano (bebida unCombo)} 
-    | (tamanioBebida.bebida) unCombo == mediano = unCombo{bebida = cambiarA grande (bebida unCombo)} 
-    | otherwise = unCombo
+agrandarBebida (Combo unaHamburguesa unaBebida unAcompaniamiento)
+    | tamanio unaBebida == 3 = Combo unaHamburguesa unaBebida unAcompaniamiento
+    | otherwise = Combo unaHamburguesa (aumentarTamanio unaBebida) unAcompaniamiento
 
-cambiarA :: Tamanio -> Bebida -> Bebida
-cambiarA tamanio unaBebida = unaBebida{tamanioBebida = tamanio}
+aumentarTamanio :: Bebida -> Bebida
+aumentarTamanio unaBebida = unaBebida {tamanio = tamanio unaBebida +1}
+
+{- agrandarBebida :: Combo -> Combo
+agrandarBebida (Combo hamburguesa bebida acompaniamiento) = Combo hamburguesa (cambiarTamanio bebida) acompaniamiento
+
+cambiarTamanio :: Bebida -> Bebida
+cambiarTamanio bebida
+    | tamanio bebida == regular = bebida{tamanio = mediano}
+    | tamanio bebida == mediano = bebida{tamanio = grande}
+    | otherwise = bebida -}
 
 -- EJEMPLOS DE CONSULTAS:
 -- agrandarBebida cajitaFeliz --> 
@@ -137,17 +143,14 @@ cambiarA tamanio unaBebida = unaBebida{tamanioBebida = tamanio}
 -- retorna el combo de modo que su hamburguesa no incluya ingredientes que cumplan con
 -- una determinada restricción.
 
-peroSin :: ([Ingrediente] -> [Ingrediente]) -> Combo -> Combo
-peroSin unaRestriccion unCombo = unCombo {hamburguesa = unaRestriccion (hamburguesa unCombo)}
+peroSin :: (Ingrediente -> Bool) -> Combo -> Combo
+peroSin unaRestriccion unCombo = unCombo {hamburguesa = filter(not.unaRestriccion)  (hamburguesa unCombo)}
 
--- condimento: Le quita los que son condimentos de una hamburguesa.
-condimento :: [Ingrediente] -> [Ingrediente]
-condimento unaHamburguesa = filter(\x-> (not.elem x) condimentos) unaHamburguesa
+condimento :: Ingrediente -> Bool
+condimento ingrediente = any(==ingrediente) condimentos
 
--- masCaloricoQue: Dado una cantidad de calorias y una hamburguesa, le quita los ingredientes que
--- superan esa cantidad.
-masCaloricoQue :: Integer -> [Ingrediente] -> [Ingrediente]
-masCaloricoQue cal unaHamburguesa = filter(\x-> not(cuantasCaloriasTiene x > cal)) unaHamburguesa
+masCaloricoQue :: Integer -> Ingrediente -> Bool
+masCaloricoQue cal ingrediente = cuantasCaloriasTiene ingrediente > cal
 
 -- EJEMPLO DE CONSULTA:
 -- peroSin (masCaloricoQue 100) dobleMcBacon -->
@@ -175,11 +178,8 @@ aplicar combo alteracion = alteracion combo
 quitar :: Ingrediente -> Combo -> Combo
 quitar elemento combo = combo {hamburguesa = quitarElemento elemento (hamburguesa combo)}
 
-quitarElemento :: Eq a => a -> [a] -> [a]
-quitarElemento _ [] = []
-quitarElemento e (x:xs) 
-    | e == x = quitarElemento e xs
-    | otherwise = x:(quitarElemento e xs)
+quitarElemento :: Ingrediente -> [Ingrediente] -> [Ingrediente]
+quitarElemento elemento unaHamburguesa = filter(/= elemento) unaHamburguesa
 
 realizar :: [(Combo -> Combo)] -> Combo -> Combo
 realizar alteraciones combo = foldl aplicar combo alteraciones
