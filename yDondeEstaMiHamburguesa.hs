@@ -17,6 +17,7 @@ data Bebida = Bebida {
 type Ingrediente = String
 type Tamanio = Int
 
+
 ------------- DATOS PARA CONSULTAS -------------
 
 cajitaFeliz, dobleMcBacon :: Combo
@@ -109,6 +110,9 @@ cambiarAcompaniamientoPor unAcompaniamiento unCombo = unCombo {acompaniamiento =
 -- (teniedo en cuenta que el máximo es el tamanio grande, 
 -- no importa cuánto se lo trate de seguir agrandando).
 
+-- Ya que el mayor tamanio es 3 en ese caso devuelvo el mismo combo.
+-- Y en caso de que no sea 3, se que es 2 o bien 1, y por eso le sumo 1 al tamanio.
+
 agrandarBebida :: Combo -> Combo
 agrandarBebida (Combo unaHamburguesa unaBebida unAcompaniamiento)
     | tamanio unaBebida == 3 = Combo unaHamburguesa unaBebida unAcompaniamiento
@@ -117,6 +121,7 @@ agrandarBebida (Combo unaHamburguesa unaBebida unAcompaniamiento)
 aumentarTamanio :: Bebida -> Bebida
 aumentarTamanio unaBebida = unaBebida {tamanio = tamanio unaBebida +1}
 
+-- OTRA FORMA:
 {- agrandarBebida :: Combo -> Combo
 agrandarBebida (Combo hamburguesa bebida acompaniamiento) = Combo hamburguesa (cambiarTamanio bebida) acompaniamiento
 
@@ -125,6 +130,7 @@ cambiarTamanio bebida
     | tamanio bebida == regular = bebida{tamanio = mediano}
     | tamanio bebida == mediano = bebida{tamanio = grande}
     | otherwise = bebida -}
+
 
 -- EJEMPLOS DE CONSULTAS:
 -- agrandarBebida cajitaFeliz --> 
@@ -199,3 +205,4 @@ realizar alteraciones combo = foldl aplicar combo alteraciones
 -- EJEMPLO DE CONSULTA:
 -- esMortal comboDePrueba --> True
 -- esMortal (realizar alteracionesDePrueba comboDePrueba) --> False
+
